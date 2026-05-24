@@ -1,0 +1,102 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+plugins {
+    id 'java-library'
+    id 'jvm-test-suite'
+    id 'maven-publish'
+    alias(libs.plugins.spotless)
+    alias(libs.plugins.owasp.dependencycheck)
+}
+
+group = 'com.maybeitssquid'
+
+def baseVersion = '1.0.0'
+def timestamp = new Date().format("yyyyMMddHHmmss")
+version = "${baseVersion}-${timestamp}"
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(libs.versions.java.get())
+    }
+    withSourcesJar()
+    withJavadocJar()
+}
+
+dependencies {
+    constraints {
+        libs.bundles.security.patches.get().each {
+            add('implementation', it)
+        }
+    }
+}
+
+testing {
+    suites.test {
+        useJUnitJupiter(libs.versions.junit)
+    }
+}
+
+spotless {
+    java {
+        targetExclude 'src/*/java/module-info.java'
+        googleJavaFormat()
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}
+
+dependencyCheck {
+    failBuildOnCVSS = 7
+}
+
+tasks.withType(Javadoc).configureEach {
+    options {
+        encoding = 'UTF-8'
+        links "https://docs.oracle.com/en/java/javase/${libs.versions.java.get()}/docs/api/"
+        addBooleanOption('html5', true)
+    }
+}
+
+publishing {
+    repositories {
+        maven {
+            name = 'GitHubPackages'
+            url = uri("https://maven.pkg.github.com/${System.env.GITHUB_REPOSITORY ?: '{{owner/repo}}'}")
+            credentials {
+                username = System.env.USERNAME ?: System.env.GITHUB_ACTOR
+                password = System.env.TOKEN ?: System.env.GITHUB_TOKEN
+            }
+        }
+    }
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifactId = '{{artifactId}}'
+            pom {
+                name = '{{ProjectName}}'
+                description = '{{description}}'
+                url = '{{projectUrl}}'
+                licenses {
+                    license {
+                        name = 'Apache License, Version 2.0'
+                        url = 'https://www.apache.org/licenses/LICENSE-2.0'
+                    }
+                }
+                scm {
+                    url = '{{projectUrl}}'
+                    connection = 'scm:git:git://github.com/{{owner/repo}}.git'
+                    developerConnection = 'scm:git:ssh://github.com/{{owner/repo}}.git'
+                }
+            }
+        }
+    }
+}
