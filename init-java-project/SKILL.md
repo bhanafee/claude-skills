@@ -70,11 +70,11 @@ Read each skill file, substitute all `{{placeholders}}`, and write to the target
 Copy the wrapper from the reference project:
 
 ```bash
-cp /Users/brian/Projects/achcharset/gradlew .
-cp /Users/brian/Projects/achcharset/gradlew.bat .
+cp /Users/brian/Projects/ASCIISafeCharsets/gradlew .
+cp /Users/brian/Projects/ASCIISafeCharsets/gradlew.bat .
 mkdir -p gradle/wrapper
-cp /Users/brian/Projects/achcharset/gradle/wrapper/gradle-wrapper.jar gradle/wrapper/
-cp /Users/brian/Projects/achcharset/gradle/wrapper/gradle-wrapper.properties gradle/wrapper/
+cp /Users/brian/Projects/ASCIISafeCharsets/gradle/wrapper/gradle-wrapper.jar gradle/wrapper/
+cp /Users/brian/Projects/ASCIISafeCharsets/gradle/wrapper/gradle-wrapper.properties gradle/wrapper/
 chmod +x gradlew
 ```
 
@@ -98,6 +98,9 @@ If the build fails, diagnose before reporting back. Common causes:
 - `[libraries]` section must appear before `[bundles]` in the TOML file
 - Catalog accessor is `libs.bundles.security.patches` (hyphens become dots)
 - Spotless failure on generated files — run `./gradlew spotlessApply` first
+- Version catalog namespace collision: if a plain key `foo` and a hyphenated key
+  `foo-bar` coexist, Gradle promotes `foo` to a sub-accessor and `.get()` fails.
+  The template avoids this by using `java` and `release` as separate top-level keys.
 
 ## Step 7 — Report
 

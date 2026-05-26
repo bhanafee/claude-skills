@@ -1,6 +1,9 @@
 [versions]
-# Java toolchain
-java = "21"
+# Java toolchain and minimum release for compiled artifacts
+# Keep these in separate namespaces (not java / java-release) to avoid Gradle
+# version catalog sub-accessor collision.
+java = "25"
+release = "17"
 
 # Plugin versions
 spotless = "8.+"
