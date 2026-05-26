@@ -102,13 +102,31 @@ If the build fails, diagnose before reporting back. Common causes:
   `foo-bar` coexist, Gradle promotes `foo` to a sub-accessor and `.get()` fails.
   The template avoids this by using `java` and `release` as separate top-level keys.
 
-## Step 7 — Report
+## Step 7 — Add Technologies table to README
+
+Every project README ends with a `## Technologies` table listing the key components and
+their versions. Add the following starter table at the end of `README.md`, then remind the
+user to extend it with any project-specific frameworks or libraries:
+
+```markdown
+## Technologies
+
+| Component | Version |
+|-----------|---------|
+| Java | 25 (toolchain; runs on 17+) |
+| Gradle | 9.5.1 |
+| JUnit | 5.12.+ |
+```
+
+## Step 8 — Report
 
 Tell the user:
 - Which files were created
 - The artifact coordinates: `com.maybeitssquid:{{artifactId}}`
 - That the `Architecture` section of `CLAUDE.md` needs filling in
 - That `README.md` and `LICENSE` must exist before the GitHub Pages workflow will succeed
+- That the Technologies table at the bottom of `README.md` should be extended with any
+  project-specific dependencies once they are added
 - That the license bug was corrected: the POM now declares Apache License 2.0 to match
   the actual `LICENSE` file (the existing sibling projects have MIT in their POM metadata
   but Apache 2.0 in their LICENSE files — this project starts with them in sync)
