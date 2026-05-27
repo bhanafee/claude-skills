@@ -27,6 +27,7 @@ Derive the following from these inputs:
 - **javaPackage** — `com.maybeitssquid.` + artifactId (e.g. `com.maybeitssquid.retryhttp`)
 - **projectUrl** — `https://github.com/` + owner/repo
 - **pageTitle** — the description argument (used verbatim in pandoc `--metadata title=`)
+- **pagesUrl** — `https://` + owner + `.github.io/` + repo + `/` (e.g. `https://bhanafee.github.io/RetryHTTP/`)
 
 ## Step 1 — Validate the working directory
 
@@ -102,11 +103,12 @@ If the build fails, diagnose before reporting back. Common causes:
   `foo-bar` coexist, Gradle promotes `foo` to a sub-accessor and `.get()` fails.
   The template avoids this by using `java` and `release` as separate top-level keys.
 
-## Step 7 — Add Technologies table to README
+## Step 7 — Add Technologies table and Links section to README
 
-Every project README ends with a `## Technologies` table listing the key components and
-their versions. Add the following starter table at the end of `README.md`, then remind the
-user to extend it with any project-specific frameworks or libraries:
+Every project README ends with a `## Technologies` table followed by a `## Links` section.
+Add both at the end of `README.md`, substituting `{{pagesUrl}}` and `{{projectUrl}}`.
+Remind the user to extend the Technologies table with any project-specific frameworks or
+libraries.
 
 ```markdown
 ## Technologies
@@ -115,7 +117,18 @@ user to extend it with any project-specific frameworks or libraries:
 |-----------|---------|
 | Java | 25 (toolchain; runs on 17+) |
 | Gradle | 9.5.1 |
-| JUnit | 5.12.+ |
+| JUnit | 6.1.0 |
+| JaCoCo | 0.8.14 |
+
+## Links
+
+- [GitHub repository]({{projectUrl}})
+- [Javadoc]({{pagesUrl}}javadoc/)
+- [Test Results]({{pagesUrl}}tests/)
+- [Coverage Report]({{pagesUrl}}coverage/)
+- [Apache 2.0 License]({{pagesUrl}}LICENSE)
+- [Code of Conduct]({{pagesUrl}}CODE_OF_CONDUCT.html)
+- [Claude Code Guidance]({{pagesUrl}}CLAUDE.html)
 ```
 
 ## Step 8 — Report

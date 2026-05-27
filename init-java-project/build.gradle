@@ -8,6 +8,7 @@ plugins {
     id 'java-library'
     id 'jvm-test-suite'
     id 'maven-publish'
+    id 'jacoco'
     alias(libs.plugins.spotless)
     alias(libs.plugins.owasp.dependencycheck)
 }
@@ -45,6 +46,14 @@ dependencies {
 testing {
     suites.test {
         useJUnitJupiter(libs.versions.junit)
+    }
+}
+
+tasks.named('jacocoTestReport') {
+    dependsOn tasks.named('test')
+    reports {
+        html.required = true
+        xml.required = false
     }
 }
 
