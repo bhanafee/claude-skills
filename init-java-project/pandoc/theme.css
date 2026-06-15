@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;700&family=Playfair+Display:wght@600;700&family=Space+Mono:wght@400;700&display=swap');
 
 /* ----- Global settings ----------------------------------------------- {{{ */
 
@@ -17,6 +18,36 @@
   --highlight-blue: #a4c2f4;
   --highlight-purple: #b4a7d6;
 
+  /* Figure / diagram palette. Used by global CSS and read by the
+   * mermaid initializer so diagrams match the rest of the page. Five
+   * generic pairs for differentiated nodes (each is fill + border):
+   *   1 — vivid rose
+   *   2 — vivid coral
+   *   3 — neutral gray
+   *   4 — golden tan
+   *   5 — dusty mauve
+   * Plus an accent pair used by `:::accent` on a mermaid node, by
+   * the matching .mermaid edge rules, and by `<mark class="accent">`
+   * in prose, so a diagram and its discussion can share one hue. */
+  --figure-bg: #ffffff;
+  --figure-surface: #f5f2eb;
+  --figure-text: #1b2733;
+  --figure-line: #4a5566;
+
+  --figure-fill-1: #facbd0;
+  --figure-border-1: #ce3d52;
+  --figure-fill-2: #fcd4bd;
+  --figure-border-2: #c76437;
+  --figure-fill-3: #d7d5d1;
+  --figure-border-3: #6d6359;
+  --figure-fill-4: #edcb94;
+  --figure-border-4: #94703b;
+  --figure-fill-5: #e0cfce;
+  --figure-border-5: #9a7e80;
+
+  --figure-accent-fill: #b5dae3;
+  --figure-accent-border: #2c7e8d;
+
   --color-inline-code: #1b2733;
   --color-inline-code-bg: #f3f3f8;
 
@@ -27,9 +58,9 @@
 
   /* --- Text --- */
 
-  --font-family-prose: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Open Sans","Helvetica Neue",sans-serif;
-  --font-family-heading: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Open Sans","Helvetica Neue",sans-serif;
-  --font-family-code: Menlo, monospace;
+  --font-family-prose: Figtree, system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Open Sans","Helvetica Neue",sans-serif;
+  --font-family-heading: "Playfair Display", system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Open Sans","Helvetica Neue",sans-serif;
+  --font-family-code: "Space Mono", Menlo, monospace;
   --side-note-number-font-family: var(--font-family-prose);
 
   --line-height: 26px;
@@ -123,6 +154,29 @@
     --highlight-green: #274e13;
     --highlight-blue: #1c4587;
     --highlight-purple: #351c75;
+
+    /* Figure / diagram palette — dark variant. Mid-luminance fills so
+     * light text reads clearly; borders are a step lighter than the
+     * fill (the opposite of light mode, where the eye expects more
+     * contrast on the darker side). */
+    --figure-bg: #161313;
+    --figure-surface: #232023;
+    --figure-text: #f7f5f2;
+    --figure-line: #c4ccd6;
+
+    --figure-fill-1: #5f2c36;
+    --figure-border-1: #ec8b98;
+    --figure-fill-2: #5e331e;
+    --figure-border-2: #e59474;
+    --figure-fill-3: #2e2c2a;
+    --figure-border-3: #a39f9a;
+    --figure-fill-4: #4a371d;
+    --figure-border-4: #c29254;
+    --figure-fill-5: #443233;
+    --figure-border-5: #bca596;
+
+    --figure-accent-fill: #2c5868;
+    --figure-accent-border: #7ac4d2;
 
     --color-inline-code: #f7f5f2;
     --color-inline-code-bg: #242121;
@@ -360,6 +414,12 @@ h3 {
   font-weight: bold;
 }
 
+h4 {
+  font-size: var(--font-size);
+  line-height: var(--line-height);
+  font-style: italic;
+}
+
 /* No one should ever have more than 4 sidenotes immediately after a heading */
 /* 0 */ h1:not(.title) + :is(*:not(.sidenote-wrapper), p),
 /* 1 */ h1:not(.title) + .sidenote-wrapper + :is(*:not(.sidenote-wrapper), p),
@@ -504,6 +564,10 @@ span.mark.yellow, mark.yellow { background-color: var(--highlight-yellow); }
 span.mark.green,  mark.green  { background-color: var(--highlight-green);  }
 span.mark.blue,   mark.blue   { background-color: var(--highlight-blue);   }
 span.mark.purple, mark.purple { background-color: var(--highlight-purple); }
+/* Accent mark: shares hue with the figure accent so a marked phrase
+ * in prose visually points to a `:::accent` node (or accented edge)
+ * in the surrounding diagram. */
+span.mark.accent, mark.accent { background-color: var(--figure-accent-fill); }
 
 .subtitle {
   margin-top: 0;
@@ -879,6 +943,26 @@ figcaption {
 
 figcaption code {
   font-size: var(--figcaption-code-font-size);
+}
+
+/* }}} */
+/* ----- Mermaid ------------------------------------------------------- {{{ */
+/* Color knobs for mermaid diagrams are passed in by assets/mermaid-init.html
+ * from the --figure-* custom properties above; these rules layer on top
+ * of mermaid's own SVG output. */
+
+/* Accent a mermaid node by adding `:::accent` after its name in the
+ * diagram source. Mermaid emits the class on the node group; rules
+ * override the inline style attributes mermaid writes onto the shape
+ * elements, so the override needs !important. */
+.mermaid g.node.accent > rect,
+.mermaid g.node.accent > polygon,
+.mermaid g.node.accent > path,
+.mermaid g.node.accent > circle,
+.mermaid g.node.accent > ellipse {
+  fill: var(--figure-accent-fill) !important;
+  stroke: var(--figure-accent-border) !important;
+  stroke-width: 2px !important;
 }
 
 /* }}} */
