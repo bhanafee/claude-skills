@@ -152,8 +152,7 @@ Tell the user:
 - That the `Architecture` section of `CLAUDE.md` needs filling in
 - That `LICENSE` (Apache 2.0) and `CODE_OF_CONDUCT.md` (Contributor Covenant 2.0) were
   created, and that `README.md` must exist before the GitHub Pages workflow will succeed
-- That the `CODE_OF_CONDUCT.md` enforcement contact is `brian@hanafee.net`; change it if
-  the project should use a project-specific address
+- That the `CODE_OF_CONDUCT.md` enforcement contact is `conduct@maybeitssquid.com`; change it if the project should use a project-specific address
 - That the Technologies table at the bottom of `README.md` should be extended with any
   project-specific dependencies once they are added
 - That the license is consistent across the project: the `LICENSE` file, the POM metadata
