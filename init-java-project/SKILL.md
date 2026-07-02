@@ -83,6 +83,14 @@ cp /Users/brian/Projects/ASCIISafeCharsets/gradle/wrapper/gradle-wrapper.propert
 chmod +x gradlew
 ```
 
+`gradlew.bat` is copied as raw CRLF bytes. This is only safe because `.gitattributes`
+(written in Step 2, with `*.bat text eol=crlf`) is already on disk before any `git add`
+touches this file — git's clean filter then normalizes the blob to LF at add time. Do
+not `git add`/`git commit` `gradlew.bat` before `.gitattributes` exists in the working
+directory, or the CRLF bytes get baked into the blob permanently, causing `gradlew.bat`
+to show as modified after every future checkout (fix if it happens:
+`git add --renormalize gradlew.bat` and commit).
+
 ## Step 5 — Create source directories
 
 Create the Java package tree. Replace `.` with `/` in `{{javaPackage}}` to get
