@@ -54,6 +54,7 @@ Create parent directories as needed.
 | `pandoc/mermaid-init.html` | `.github/pandoc/mermaid-init.html` |
 | `pandoc/mermaid.lua` | `.github/pandoc/mermaid.lua` |
 | `pandoc/skylighting-paper-theme.css` | `.github/pandoc/skylighting-paper-theme.css` |
+| `pandoc/strip-title.lua` | `.github/pandoc/strip-title.lua` |
 | `pandoc/template.html5` | `.github/pandoc/template.html5` |
 | `pandoc/theme.css` | `.github/pandoc/theme.css` |
 
