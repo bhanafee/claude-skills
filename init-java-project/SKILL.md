@@ -115,17 +115,9 @@ If the build fails, diagnose before reporting back. Common causes:
   `foo-bar` coexist, Gradle promotes `foo` to a sub-accessor and `.get()` fails.
   The template avoids this by using `java` and `release` as separate top-level keys.
 
-## Step 7 — Add the license badge, Technologies table, and Links section to README
+## Step 7 — Add the Technologies table and Links section to README
 
-Add a license badge immediately below the top-level `# ProjectName` title in `README.md`
-(insert a blank line on either side so it renders on its own line):
-
-```markdown
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-```
-
-If `README.md` does not yet exist, create it with the `# ProjectName` title, the
-description, and the badge before continuing.
+If `README.md` does not yet exist, create it with the `# ProjectName` title and description.
 
 Every project README ends with a `## Technologies` table followed by a `## Links` section.
 Add both at the end of `README.md`, substituting `{{pagesUrl}}` and `{{projectUrl}}`.
@@ -148,9 +140,12 @@ libraries.
 - [Javadoc]({{pagesUrl}}javadoc/)
 - [Test Results]({{pagesUrl}}tests/)
 - [Coverage Report]({{pagesUrl}}coverage/)
-- [Apache 2.0 License]({{pagesUrl}}LICENSE)
 - [Code of Conduct]({{pagesUrl}}CODE_OF_CONDUCT.html)
 - [Claude Code Guidance]({{pagesUrl}}CLAUDE.html)
+
+---
+
+**License:** [![Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 ```
 
 ## Step 8 — Report
@@ -165,4 +160,4 @@ Tell the user:
 - That the Technologies table at the bottom of `README.md` should be extended with any
   project-specific dependencies once they are added
 - That the license is consistent across the project: the `LICENSE` file, the POM metadata
-  in `build.gradle`, and the README license badge all declare Apache License 2.0
+  in `build.gradle`, and the README license badge (in the Links section) all declare Apache License 2.0
