@@ -143,9 +143,7 @@ libraries.
 - [Code of Conduct]({{pagesUrl}}CODE_OF_CONDUCT.html)
 - [Claude Code Guidance]({{pagesUrl}}CLAUDE.html)
 
----
-
-**License:** [![Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 ```
 
 ## Step 8 — Report
