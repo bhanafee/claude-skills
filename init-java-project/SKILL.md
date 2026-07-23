@@ -72,16 +72,19 @@ Read each skill file, substitute all `{{placeholders}}`, and write to the target
 
 ## Step 4 — Copy the Gradle wrapper
 
-Copy the wrapper from the reference project:
+Copy the wrapper from a reference project. The reference project should be a sibling directory with an existing Gradle wrapper:
 
 ```bash
-cp /Users/brian/Projects/ASCIISafeCharsets/gradlew .
-cp /Users/brian/Projects/ASCIISafeCharsets/gradlew.bat .
+REFERENCE_PROJECT="${REFERENCE_PROJECT:-./../ASCIISafeCharsets}"
+cp "$REFERENCE_PROJECT/gradlew" .
+cp "$REFERENCE_PROJECT/gradlew.bat" .
 mkdir -p gradle/wrapper
-cp /Users/brian/Projects/ASCIISafeCharsets/gradle/wrapper/gradle-wrapper.jar gradle/wrapper/
-cp /Users/brian/Projects/ASCIISafeCharsets/gradle/wrapper/gradle-wrapper.properties gradle/wrapper/
+cp "$REFERENCE_PROJECT/gradle/wrapper/gradle-wrapper.jar" gradle/wrapper/
+cp "$REFERENCE_PROJECT/gradle/wrapper/gradle-wrapper.properties" gradle/wrapper/
 chmod +x gradlew
 ```
+
+Set `REFERENCE_PROJECT` to the path of an existing Java/Gradle project if the default sibling directory does not exist.
 
 `gradlew.bat` is copied as raw CRLF bytes. This is only safe because `.gitattributes`
 (written in Step 2, with `*.bat text eol=crlf`) is already on disk before any `git add`
