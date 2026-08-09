@@ -23,6 +23,19 @@ repositories {
     mavenCentral()
 }
 
+// The version catalog uses dynamic ranges, and those ranges accept prereleases: an unfiltered
+// slf4j "2.+" resolves to 2.1.0-alpha1. Match known prerelease qualifiers rather than allowlisting
+// stable ones. Stable releases carry odd suffixes — 0.0.20131108.vaadin1 (a spring-boot-starter-test
+// transitive) and 2.3.1-b170201.1204 are both stable — and an allowlist rejects them, which breaks
+// resolution with "Could not find" rather than picking a different version.
+configurations.all {
+    resolutionStrategy.componentSelection.all { selection ->
+        if (selection.candidate.version ==~ /(?i).*[.\-](alpha|beta|rc|cr|snapshot|preview|dev|milestone|m\d+)[.\-]?\d*$/) {
+            selection.reject('prerelease version')
+        }
+    }
+}
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(libs.versions.java.get())

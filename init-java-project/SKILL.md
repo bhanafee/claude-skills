@@ -162,3 +162,14 @@ Tell the user:
   project-specific dependencies once they are added
 - That the license is consistent across the project: the `LICENSE` file, the POM metadata
   in `build.gradle`, and the README license badge (in the Links section) all declare Apache License 2.0
+- That `build.gradle` rejects prerelease versions when resolving the catalog's dynamic ranges.
+  Without it, a range such as `slf4j = "2.+"` resolves to a prerelease (`2.1.0-alpha1`) and ships
+  in the published POM. The filter matches known prerelease qualifiers (`alpha`, `beta`, `rc`,
+  `cr`, `snapshot`, `preview`, `dev`, `milestone`, `M<n>`). Do not replace it with an allowlist of
+  "stable-looking" versions: real stable releases carry odd suffixes — `0.0.20131108.vaadin1`,
+  pulled in transitively by `spring-boot-starter-test`, and `2.3.1-b170201.1204` — and an
+  allowlist rejects them, failing the build with "Could not find" rather than selecting a
+  different version. Two limits worth stating: the rule covers project configurations only, so
+  dynamic **plugin** versions (`spotless`, `owasp-dependencycheck`) are not filtered and should be
+  pinned explicitly if that matters; and it excludes prereleases without pinning anything, so
+  builds still are not reproducible. Dependency locking is the separate lever for that.
