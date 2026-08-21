@@ -1,13 +1,13 @@
 ---
 name: gradle-security-patch
-description: Add a security patch for a transitive dependency in a Gradle project using the version catalog bundle pattern. Use when a CVE or security advisory (e.g. GHSA-xxxx) requires pinning a minimum version of an indirect dependency, whether introduced by a project dependency or a plugin.
+description: Add a security patch for a transitive dependency in a Gradle project using the version catalog bundle pattern. Adds appropriate enforcement infrastructure and validates that patches work via OWASP dependencyCheckAnalyze.
 argument-hint: <advisory-id> <group:artifact> <minimum-version> [project|plugin]
 allowed-tools: Read, Edit, Glob, Grep, Bash
 ---
 
 # Gradle Security Patch Skill
 
-Patch a transitive dependency vulnerability by adding it to the version catalog `security-patches` bundle and enforcing it in `build.gradle`.
+Patch a transitive dependency vulnerability by adding it to the version catalog and enforcing it through project constraints or dependency management overrides. All versions are managed in the version catalog (libs.versions.toml), never hardcoded in build.gradle.
 
 ## Arguments
 
@@ -19,47 +19,41 @@ Patch a transitive dependency vulnerability by adding it to the version catalog 
 
 If any argument is missing, ask the user before proceeding.
 
-## Step 1 — Locate the version catalog
+## Step 1 — Locate the version catalog and check project structure
 
-Find `gradle/libs.versions.toml` relative to the project root. If it does not exist, stop and tell the user.
+Find `gradle/libs.versions.toml` and `build.gradle`. Check:
+- Does the project apply Spring Boot or import BOMs (search for `dependencyManagement` blocks)?
+- Is it multi-module (check settings.gradle for `include` statements)?
+- What does the project directly depend on (Spring Cloud starters, etc.)?
 
-## Step 2 — Add the library entry to the catalog
+**Key insight**: Projects with complex BOM management (Spring Boot, Spring Cloud) need explicit dependency overrides in dependencyManagement, not just constraints.
 
-The library alias must be all-lowercase. Derive it from the advisory ID:
-- Prefix with `patch-`
-- Lowercase the entire advisory ID
-- Example: `GHSA-72hv-8253-57qq` → `patch-ghsa-72hv-8253-57qq`
+## Step 2 — Add the patch to the version catalog
 
-Add the library under `[libraries]` (create the section if absent) using a rich version constraint that enforces the minimum but allows higher versions:
+Choose a simple version key (lowercase, no hyphens for top-level keys):
+- Good: `httpcore5Core`, `httpclient5`, `log4jApi`
+- Avoid: hyphenated keys at the top level like `httpcore5-core` (causes Gradle accessor issues)
 
-```toml
-patch-ghsa-72hv-8253-57qq = { module = "com.fasterxml.jackson.core:jackson-core", version = { strictly = "[2.21.1,)", prefer = "2.21.1" } }
-```
-
-Replace the alias, module, and version with the actual values.
-
-## Step 3 — Add the library to the security-patches bundle
-
-Locate the `[bundles]` section (create it if absent, always place it before `[plugins]`).
-
-If a `security-patches` bundle already exists, append the new alias to its list.
-If it does not exist, create it:
+Add the version to the `[versions]` section:
 
 ```toml
-security-patches = ["patch-ghsa-72hv-8253-57qq"]
+[versions]
+httpcore5Core = "5.4.3"
 ```
 
-## Step 4 — Update build.gradle and settings.gradle
+Then add the library entry to `[libraries]` using `version { strictly }` constraints:
 
-Read `build.gradle`. The bundle accessor for `security-patches` is `libs.bundles.security.patches` (hyphens create nested accessors in Gradle's type-safe API).
+```toml
+patch-cve-2026-54399 = { module = "org.apache.httpcomponents.core5:httpcore5", version = { strictly = "[5.4.3,)", prefer = "5.4.3" } }
+```
 
-### For project transitive dependencies (`project` type)
+Add the patch to the `security-patches` bundle in `[bundles]`.
 
-Ensure a `dependencies { constraints { ... } }` block exists that iterates the bundle and adds each entry as an `implementation` constraint. This propagates to `compileClasspath` and `runtimeClasspath` — the configurations Gradle and security scanners analyse.
+## Step 3 — Apply enforcement based on project structure
 
-If the block is already present, verify the bundle reference is included; do not duplicate it.
+### For projects WITHOUT BOM imports (simple projects):
 
-If it is absent, add it after the `repositories { }` block:
+Ensure the `dependencies { constraints }` block exists in the subprojects (or root for single-module):
 
 ```groovy
 dependencies {
@@ -71,43 +65,53 @@ dependencies {
 }
 ```
 
-### For plugin transitive dependencies (`plugin` type)
+This is sufficient and will be picked up by OWASP dependencyCheck.
 
-The version catalog (`libs`) is **not** available inside `buildscript {}` blocks, and the classpath is locked before project scope runs. Therefore enforcement requires two things:
+### For projects WITH BOM imports (Spring Boot, Spring Cloud, etc.):
 
-1. **Catalog entry** — follow Steps 2 and 3 above so the patch is documented and enforced for any project configurations that may also resolve the dependency.
-
-2. **`settings.gradle` hook** — `gradle.beforeProject` fires before the root project's buildscript classpath is resolved, and at that point `libs` is not yet available. Instead, read `patch-*` entries directly from `libs.versions.toml` and add them to the buildscript classpath programmatically.
-
-Read `settings.gradle`. If a `gradle.beforeProject` block with TOML parsing is already present, no change is needed — new catalog entries are picked up automatically.
-
-If it is absent, add it after the `rootProject.name` line:
+The module that imports the BOM needs explicit dependency management overrides, because BOMs take precedence over constraints. Add or update the `dependencyManagement` block:
 
 ```groovy
-gradle.beforeProject { proj ->
-    if (proj == proj.rootProject) {
-        def tomlFile = new File(proj.rootDir, 'gradle/libs.versions.toml')
-        tomlFile.eachLine { line ->
-            def matcher = line =~ /^patch-[a-z0-9-]+ = \{ module = "([^"]+)", version = \{ strictly = "[^"]+", prefer = "([^"]+)"/
-            if (matcher) {
-                proj.buildscript.dependencies.add('classpath', "${matcher[0][1]}:${matcher[0][2]}")
-            }
-        }
+dependencyManagement {
+    dependencies {
+        // Override BOM-managed versions for security patches (versions from catalog)
+        dependency "org.apache.httpcomponents.core5:httpcore5:${libs.versions.httpcore5Core.get()}"
+        dependency "org.apache.logging.log4j:log4j-api:${libs.versions.log4jApi.get()}"
     }
 }
 ```
 
-This reads every `patch-*` library from the TOML and adds it to the buildscript classpath before resolution. Gradle's conflict resolution selects the highest version, so adding a new catalog entry is sufficient — no further changes to `build.gradle` or `settings.gradle` are needed for subsequent patches.
+**Critical**: Always use `libs.versions.KEYNAME.get()` to reference versions from the catalog. Never hardcode version numbers in build.gradle.
 
-Also ensure `build.gradle` has the project-level `dependencies { constraints { ... } }` block (see above), so the patch is applied to both the plugin classpath and project configurations.
+For multi-module projects with a BOM-importing submodule (e.g., `demo` module importing Spring Cloud), add the overrides to that submodule's build.gradle, not the root.
 
-If a `buildscript {}` block exists in `build.gradle` with explicit `classpath` entries for security patches, remove those entries — they are now redundant. Keep the `buildscript { repositories { mavenCentral() } }` block if present.
+## Step 4 — Verify patches are enforced
 
-## Step 5 — Build and test
+Run `./gradlew build` to confirm the build succeeds with constraints/overrides in place.
 
-Run `./gradlew build` and confirm it succeeds. If it fails with a catalog accessor error, check:
-- The library alias is fully lowercase
-- The bundle name and accessor match (`security-patches` → `libs.bundles.security.patches`)
-- The `[libraries]` section appears before `[bundles]` in the TOML file
+## Step 5 — Validate with OWASP dependencyCheckAnalyze
 
-Report the outcome to the user, including which files were changed and what the resolved constraint enforces.
+Run the full OWASP scan to confirm the patched CVEs are resolved:
+
+```bash
+./gradlew dependencyCheckAnalyze 2>&1 | grep "CVE-XXXX"
+```
+
+Confirm that the CVE numbers you patched are **NOT** in the failure list. If they still appear, the patch is not being enforced—check:
+- Are BOMs overriding your constraints? (likely if you only used constraints)
+- Is the version key correct and accessible via `libs.versions.KEYNAME.get()`?
+- For multi-module projects, are the overrides in the right submodule (the one that actually imports the BOM)?
+
+## Step 6 — Report the outcome
+
+Report to the user:
+- Files changed (libs.versions.toml, build.gradle, and/or submodule build.gradle)
+- Whether constraints, BOM overrides, or both were used
+- Verify that **no version numbers appear in build.gradle** — all versions come from libs.versions.toml
+- Confirmed resolved version from OWASP scan showing the patched CVE is gone
+- CVEs/advisories addressed by this patch
+
+**Example:**
+- Modified `gradle/libs.versions.toml`: Added `httpcore5Core = "5.4.3"` and `patch-cve-2026-54399` library entry
+- Modified `demo/build.gradle`: Added dependencyManagement override `dependency "org.apache.httpcomponents.core5:httpcore5:${libs.versions.httpcore5Core.get()}"`
+- OWASP scan confirms: CVE-2026-54399 no longer in failure list ✅
