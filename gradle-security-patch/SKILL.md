@@ -41,13 +41,15 @@ Add the version to the `[versions]` section:
 httpcore5Core = "5.4.3"
 ```
 
-Then add the library entry to `[libraries]` using `version { strictly }` constraints:
+Then add the library entry to `[libraries]` using `version { strictly }` constraints. Always include both `strictly` and `prefer` for consistency:
 
 ```toml
 patch-cve-2026-54399 = { module = "org.apache.httpcomponents.core5:httpcore5", version = { strictly = "[5.4.3,)", prefer = "5.4.3" } }
 ```
 
 Add the patch to the `security-patches` bundle in `[bundles]`.
+
+**Important for projects with settings.gradle parsing**: If the project uses `settings.gradle` or similar build scripts to parse and apply these patches programmatically (e.g., via regex matching), ensure the parsing logic is **robust to format variations**. Make the `prefer` clause optional in regex patterns, since Dependabot or manual edits might omit or reformat it. Brittle parsing can cause Dependabot PR validation to fail silently when constraints aren't applied to the buildscript classpath.
 
 ## Step 3 — Apply enforcement based on project structure
 
