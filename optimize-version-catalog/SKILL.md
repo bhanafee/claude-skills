@@ -49,6 +49,13 @@ The `strictly` range `[X.Y,)` allows any version at or above the floor.
 it does not downgrade — conflict resolution always picks the highest satisfying
 version.
 
+**Important**: If the project uses `settings.gradle` or similar build scripts to
+parse security patch definitions programmatically (e.g., via regex), verify that
+the parsing logic is robust to Dependabot updates or manual edits that might omit
+or reformat the `prefer` clause. Brittle parsing causes constraint application to
+fail silently, allowing transitive dependencies to resolve to versions that
+violate security floors.
+
 ## Detect unused catalog entries
 
 Compare every catalog key against `libs.*` references in all build.gradle files.
