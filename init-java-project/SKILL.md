@@ -42,6 +42,7 @@ Create parent directories as needed.
 
 | Skill file | Target path |
 |---|---|
+| `CLAUDE.md` | `CLAUDE.md` (points Claude Code at `@AGENTS.md`) |
 | `CODE_OF_CONDUCT.md` | `CODE_OF_CONDUCT.md` |
 | `gitignore` | `.gitignore` |
 | `gitattributes` | `.gitattributes` |
@@ -68,7 +69,7 @@ Read each skill file, substitute all `{{placeholders}}`, and write to the target
 | `settings.gradle` | `settings.gradle` | `{{ProjectName}}` |
 | `build.gradle` | `build.gradle` | `{{ProjectName}}`, `{{artifactId}}`, `{{description}}`, `{{owner/repo}}`, `{{projectUrl}}` |
 | `github/workflows/pages.yml` | `.github/workflows/pages.yml` | `{{pageTitle}}` |
-| `CLAUDE.md` | `CLAUDE.md` | `{{description}}`, `{{artifactId}}`, `{{javaPackage}}` |
+| `AGENTS.md` | `AGENTS.md` | `{{description}}`, `{{artifactId}}`, `{{javaPackage}}` |
 
 ## Step 4 — Copy the Gradle wrapper
 
@@ -145,6 +146,7 @@ libraries.
 - [Coverage Report]({{pagesUrl}}coverage/)
 - [Code of Conduct]({{pagesUrl}}CODE_OF_CONDUCT.html)
 - [Claude Code Guidance]({{pagesUrl}}CLAUDE.html)
+- [Agents guidance]({{pagesUrl}}AGENTS.html)
 
 [![Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 ```
@@ -154,7 +156,7 @@ libraries.
 Tell the user:
 - Which files were created
 - The artifact coordinates: `com.maybeitssquid:{{artifactId}}`
-- That the `Architecture` section of `CLAUDE.md` needs filling in
+- That the `Architecture` section of `AGENTS.md` needs filling in
 - That `LICENSE` (Apache 2.0) and `CODE_OF_CONDUCT.md` (Contributor Covenant 2.0) were
   created, and that `README.md` must exist before the GitHub Pages workflow will succeed
 - That the `CODE_OF_CONDUCT.md` enforcement contact is `conduct@maybeitssquid.com`; change it if the project should use a project-specific address
