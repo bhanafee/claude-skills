@@ -7,7 +7,7 @@ release = "17"
 
 # Plugin versions
 spotless = "8.+"
-owasp-dependencycheck = "12.+"
+owasp-dependencycheck = "13.+"
 
 # Testing
 junit = { strictly = "[5,)", prefer = "5.12.+" }
