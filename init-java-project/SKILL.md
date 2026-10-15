@@ -86,13 +86,13 @@ chmod +x gradlew
 
 Set `REFERENCE_PROJECT` to the path of an existing Java/Gradle project if the default sibling directory does not exist.
 
-`gradlew.bat` is copied as raw CRLF bytes. This is only safe because `.gitattributes`
-(written in Step 2, with `*.bat text eol=crlf`) is already on disk before any `git add`
-touches this file — git's clean filter then normalizes the blob to LF at add time. Do
-not `git add`/`git commit` `gradlew.bat` before `.gitattributes` exists in the working
-directory, or the CRLF bytes get baked into the blob permanently, causing `gradlew.bat`
-to show as modified after every future checkout (fix if it happens:
-`git add --renormalize gradlew.bat` and commit).
+`gradlew.bat` is copied as raw CRLF bytes and must be committed that way. `.gitattributes`
+(Step 2) marks `*.bat -text`, so git stores it byte-for-byte. Do not change that to
+`text eol=crlf`: Gradle generates `gradlew.bat` with CRLF and Dependabot's gradle-wrapper
+updates commit it as-is, bypassing `.gitattributes`, so a normalizing rule makes every
+wrapper bump leave `gradlew.bat` permanently "modified". The `line-endings` job in
+`gradle.yml` fails CI if `gradlew` is not stored LF, if `gradlew.bat` is not stored CRLF,
+or if any file stops matching `.gitattributes`.
 
 ## Step 5 — Create source directories
 
