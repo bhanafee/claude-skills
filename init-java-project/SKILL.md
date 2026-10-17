@@ -71,6 +71,8 @@ Read each skill file, substitute all `{{placeholders}}`, and write to the target
 | `github/workflows/pages.yml` | `.github/workflows/pages.yml` | `{{pageTitle}}` |
 | `AGENTS.md` | `AGENTS.md` | `{{description}}`, `{{artifactId}}`, `{{javaPackage}}` |
 
+Keep the `// shared:begin` and `// shared:end` markers in `build.gradle` and `settings.gradle`. The `shared-build` job in `gradle.yml` checks them against `shared/` in this repo, so nothing else needs copying.
+
 ## Step 4 — Copy the Gradle wrapper
 
 Copy the wrapper from a reference project. The reference project should be a sibling directory with an existing Gradle wrapper:

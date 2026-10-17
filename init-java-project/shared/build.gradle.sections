@@ -1,0 +1,90 @@
+// Canonical shared build sections for the Java/Gradle projects. Each block is wrapped in begin and end
+// markers naming it (the same markers in every project). check-shared-sections.sh compares the blocks.
+// Edit a section here, then copy the change into each project in the same change set.
+
+// shared:begin prerelease-filter
+configurations.all {
+    resolutionStrategy.componentSelection.all { selection ->
+        if (selection.candidate.version ==~ /(?i).*[.\-](alpha|beta|rc|cr|snapshot|preview|dev|milestone|m\d+)[.\-]?\d*$/) {
+            selection.reject('prerelease version')
+        }
+    }
+}
+// shared:end prerelease-filter
+
+    // shared:begin toolchain
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(libs.versions.java.get())
+    }
+    // shared:end toolchain
+
+// shared:begin release-option
+tasks.withType(JavaCompile).configureEach {
+    options.release = libs.versions.release.get().toInteger()
+}
+// shared:end release-option
+
+// shared:begin jacoco-report
+tasks.named('jacocoTestReport') {
+    dependsOn tasks.named('test')
+    reports {
+        html.required = true
+        xml.required = false
+    }
+}
+// shared:end jacoco-report
+
+// shared:begin spotless
+spotless {
+    java {
+        targetExclude 'src/*/java/module-info.java'
+        googleJavaFormat()
+        removeUnusedImports()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}
+// shared:end spotless
+
+// shared:begin nvd-key
+def nvdKey = providers.environmentVariable('NVD_API_KEY')
+    .orElse(providers.gradleProperty('nvd.apiKey')).orNull
+// shared:end nvd-key
+
+// shared:begin dependency-check
+dependencyCheck {
+    failBuildOnCVSS = 7
+    if (nvdKey) {
+        nvd { apiKey = nvdKey }
+    } else {
+        autoUpdate = false
+    }
+}
+// shared:end dependency-check
+
+// shared:begin nvd-warning
+tasks.named('dependencyCheckAnalyze') {
+    doFirst {
+        if (!nvdKey) {
+            logger.warn('NVD_API_KEY is not set: using the local NVD cache without a live update.')
+        }
+    }
+}
+// shared:end nvd-warning
+
+// shared:begin javadoc-options
+tasks.withType(Javadoc).configureEach {
+    options {
+        encoding = 'UTF-8'
+        links "https://docs.oracle.com/en/java/javase/${libs.versions.java.get()}/docs/api/"
+        addBooleanOption('html5', true)
+        // Standard JDK documentation tags are not registered for non-JDK code by default
+        tags(
+                'apiNote:a:API Note:',
+                'implSpec:a:Implementation Requirements:',
+                'implNote:a:Implementation Note:'
+        )
+    }
+}
+// shared:end javadoc-options
+

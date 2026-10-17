@@ -25,6 +25,10 @@ This file documents key information about the project architecture, build comman
 
 [TODO: describe the module structure and key design decisions]
 
+## Shared build sections
+
+`build.gradle` and `settings.gradle` wrap the build logic this project shares with the other Java/Gradle projects in `// shared:begin NAME` and `// shared:end NAME` markers. The canonical copies live in `claude-skills/init-java-project/shared/`. The `shared-build` CI job checks out that directory and fails if a wrapped section differs from its canonical copy. Indentation, blank lines and comment lines are ignored. To change a shared section, change the canonical copy and the same section in every project in one change set. Run the check locally with `bash <claude-skills>/init-java-project/shared/check-shared-sections.sh . <claude-skills>/init-java-project/shared`.
+
 ## Code style
 
 Spotless enforces Google Java Format. Run `./gradlew spotlessApply` before committing.
