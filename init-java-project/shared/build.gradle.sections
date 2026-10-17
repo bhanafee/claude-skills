@@ -2,7 +2,12 @@
 // markers naming it (the same markers in every project). check-shared-sections.sh compares the blocks.
 // Edit a section here, then copy the change into each project in the same change set.
 
-// shared:begin prerelease-filter
+// shared:begin build
+// The version catalog uses dynamic ranges, and those ranges accept prereleases: an unfiltered
+// slf4j "2.+" resolves to 2.1.0-alpha1. Match known prerelease qualifiers rather than allowlisting
+// stable ones. Stable releases carry odd suffixes — 0.0.20131108.vaadin1 (a spring-boot-starter-test
+// transitive) and 2.3.1-b170201.1204 are both stable — and an allowlist rejects them, which breaks
+// resolution with "Could not find" rather than picking a different version.
 configurations.all {
     resolutionStrategy.componentSelection.all { selection ->
         if (selection.candidate.version ==~ /(?i).*[.\-](alpha|beta|rc|cr|snapshot|preview|dev|milestone|m\d+)[.\-]?\d*$/) {
@@ -10,9 +15,7 @@ configurations.all {
         }
     }
 }
-// shared:end prerelease-filter
 
-// shared:begin java
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(libs.versions.java.get())
@@ -20,15 +23,19 @@ java {
     withSourcesJar()
     withJavadocJar()
 }
-// shared:end java
 
-// shared:begin release-option
 tasks.withType(JavaCompile).configureEach {
     options.release = libs.versions.release.get().toInteger()
 }
-// shared:end release-option
 
-// shared:begin jacoco-report
+dependencies {
+    constraints {
+        libs.bundles.security.patches.get().each {
+            add('implementation', it)
+        }
+    }
+}
+
 tasks.named('jacocoTestReport') {
     dependsOn tasks.named('test')
     reports {
@@ -36,9 +43,7 @@ tasks.named('jacocoTestReport') {
         xml.required = false
     }
 }
-// shared:end jacoco-report
 
-// shared:begin spotless
 spotless {
     java {
         targetExclude 'src/*/java/module-info.java'
@@ -48,14 +53,11 @@ spotless {
         endWithNewline()
     }
 }
-// shared:end spotless
 
-// shared:begin nvd-key
+// The NVD key is optional. Without one, the check uses the local NVD cache and warns.
 def nvdKey = providers.environmentVariable('NVD_API_KEY')
     .orElse(providers.gradleProperty('nvd.apiKey')).orNull
-// shared:end nvd-key
 
-// shared:begin dependency-check
 dependencyCheck {
     failBuildOnCVSS = 7
     if (nvdKey) {
@@ -64,9 +66,7 @@ dependencyCheck {
         autoUpdate = false
     }
 }
-// shared:end dependency-check
 
-// shared:begin nvd-warning
 tasks.named('dependencyCheckAnalyze') {
     doFirst {
         if (!nvdKey) {
@@ -74,9 +74,7 @@ tasks.named('dependencyCheckAnalyze') {
         }
     }
 }
-// shared:end nvd-warning
 
-// shared:begin javadoc-options
 tasks.withType(Javadoc).configureEach {
     options {
         encoding = 'UTF-8'
@@ -90,5 +88,5 @@ tasks.withType(Javadoc).configureEach {
         )
     }
 }
-// shared:end javadoc-options
+// shared:end build
 
