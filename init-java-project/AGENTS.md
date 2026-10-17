@@ -21,6 +21,37 @@ This file documents key information about the project architecture, build comman
 
 **NVD key (optional):** `dependencyCheckAnalyze` reads the key from the `NVD_API_KEY` environment variable or the `nvd.apiKey` Gradle property. With a key, it updates the NVD data live. Without one, it uses the local NVD cache and logs a warning. CI runs without a key, so it also uses the cache.
 
+## Versioning and Releases
+
+Versions are derived from git tags using [`gradle-git-version`](https://github.com/palantir/gradle-git-version):
+
+- **On a tag** (e.g., `v1.0.0`) → version = `1.0.0`
+- **After a tag** → version = tag + distance + commit hash (e.g., `1.0.1-3-gABC1234` = 3 commits after v1.0.0)
+- **No tags yet** → version synthesized from git history (e.g., `0.0.1-dev-88-gXYZ`)
+
+**To create a release:**
+
+```bash
+# Ensure all commits are pushed
+git push origin main
+
+# Create and push the tag (triggers automatic version picking in build)
+git tag -a v1.0.0 -m "Release 1.0.0"
+git push origin v1.0.0
+
+# Build and publish
+./gradlew clean build publish
+```
+
+**To delete a release tag:**
+
+```bash
+git tag -d v1.0.0              # Delete locally
+git push origin :v1.0.0        # Delete from remote
+```
+
+Configuration cache is enabled (`org.gradle.configuration-cache=true` in `gradle.properties`).
+
 ## Architecture
 
 [TODO: describe the module structure and key design decisions]
