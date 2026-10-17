@@ -19,6 +19,8 @@ This file documents key information about the project architecture, build comman
 ./gradlew test --tests "{{javaPackage}}.ExampleTest"
 ```
 
+**NVD key (optional):** `dependencyCheckAnalyze` reads the key from the `NVD_API_KEY` environment variable or the `nvd.apiKey` Gradle property. With a key, it updates the NVD data live. Without one, it uses the local NVD cache and logs a warning. CI runs without a key, so it also uses the cache.
+
 ## Architecture
 
 [TODO: describe the module structure and key design decisions]
