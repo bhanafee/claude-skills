@@ -2,71 +2,82 @@
 name: github-status
 description: Check for open PRs and security alerts in GitHub repositories
 argument-hint: "[repo-name ...]"
-allowed-tools: Bash, mcp__github__search_pull_requests, mcp__github__search_repositories, mcp__github__get_me
+allowed-tools: Bash
 ---
 
 # GitHub Status Check
 
-Check for open pull requests and security/dependabot alerts across specified repositories, or your primary projects by default.
+Check open pull requests and security alerts across specified repositories, or the primary projects by default.
 
 ## Usage
 
 ### Default behavior (no arguments)
-Check all primary projects:
 ```
 /github-status
 ```
 
-Checks: `ASCIISafeCharsets`, `Masking`, `RetryHTTP`, `RotatingSecrets`, `KafkaGuaranteesLab`, `RecordIO`
+Checks the primary projects from the CLAUDE.md project table (owner `bhanafee`):
+`ASCIISafeCharsets`, `Masking`, `RetryHTTP`, `RotatingSecrets`, `KafkaGuaranteesLab`, `RecordIO`
 
 ### With specific repos
 ```
 /github-status Masking RetryHTTP
-/github-status personal-site
+/github-status bhanafee/RecordIO
+/github-status someowner/somerepo
 ```
 
-Arguments are case-insensitive repository names (with or without owner prefix `bhanafee/`).
+Arguments are case-insensitive repository names. A bare name means `bhanafee/<name>`. Use `owner/repo` for repos under another owner.
 
 ## What it checks
 
-1. **Open Pull Requests** — Lists all open PRs in the specified repos
-2. **Security Alerts** — Shows Dependabot and other GitHub security alerts
-3. **Summary** — Quick overview of what needs attention
+For each repo, run these with `gh` (no MCP tools):
 
-## How it works
+1. **Open pull requests**
+   `gh pr list --repo <owner>/<repo> --state open --json number,title,author,createdAt,isDraft`
+2. **Dependabot alerts**
+   `gh api "repos/<owner>/<repo>/dependabot/alerts?state=open&per_page=100"`
+   Report severity, package, GHSA id, summary, and first patched version.
+3. **Code scanning and secret scanning** (optional, same pattern):
+   `gh api "repos/<owner>/<repo>/code-scanning/alerts?state=open&per_page=100"`
+   `gh api "repos/<owner>/<repo>/secret-scanning/alerts?state=open&per_page=100"`
+   A 403 or 404 means the feature is not enabled for that repo. Report it as "not enabled", not as an error.
 
-The skill uses:
-- **GitHub MCP tools** to search for open PRs (no special permissions needed beyond GitHub auth)
-- **`gh` CLI** to retrieve security alerts (requires Bash permission + `gh` in allowlist)
+## Output
+
+Print one line per repo, every time, even when the count is zero:
+
+```
+Masking: 0 PRs, 0 Dependabot alerts
+RecordIO: 1 PR, 2 Dependabot alerts (1 high)
+```
+
+If a query fails for any other reason, print `<repo>: ERROR (<gh message>)` and continue with the other repos. Never leave a repo out of the output.
+
+Finish with a summary listing only the repos that need attention. If nothing does, say so.
 
 ## Permissions required
 
-To run this skill without prompts, you need these Bash allowlist entries in `.claude/settings.json`:
+Add these entries to the `permissions.allow` list in `.claude/settings.json` (or the user settings) so the skill runs without prompts:
 
 ```json
 {
   "permissions": {
-    "bash": {
-      "allowlist": [
-        "gh alert list --repo",
-        "gh pr list --repo",
-        "gh repo view -R"
-      ]
-    }
+    "allow": [
+      "Bash(gh pr list:*)",
+      "Bash(gh repo view:*)",
+      "Bash(gh api repos/*/dependabot/alerts*)",
+      "Bash(gh api repos/*/code-scanning/alerts*)",
+      "Bash(gh api repos/*/secret-scanning/alerts*)"
+    ]
   }
 }
 ```
 
-**How to add these automatically:**
-```
-/fewer-permission-prompts
-```
-
-This will scan your recent commands and add safe `gh` operations to your allowlist.
+Use `/fewer-permission-prompts` or the `update-config` skill to add them automatically.
 
 ## Notes
 
-- GitHub authentication is required: `gh auth status`
-- Dependabot alerts require the repo to have Dependabot enabled
-- Private repos may have different alert visibility rules
-- If `gh` commands are blocked, you'll see a permission prompt (dismiss it to use MCP tools only)
+- Authentication: `gh auth status` must show a logged-in account with read access to the repos.
+- Dependabot alerts require Dependabot to be enabled on the repo. A 403 on that endpoint usually means the token lacks the `security_events` or Dependabot read scope, or the feature is off.
+- Private repos may have different alert visibility rules.
+- If a `gh` command is blocked by a permission prompt, add its pattern to the allowlist above rather than falling back to another tool.
